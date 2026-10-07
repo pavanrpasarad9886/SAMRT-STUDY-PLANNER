@@ -1,294 +1,244 @@
-// =====================================
-// SMART STUDY PLANNER - PROGRESS
-// Member 4
-// =====================================
+// progress.js
+// Today's Plan + Progress + Exam Countdown
+
+let currentPlan = [];
 
 let completedTasks =
-    JSON.parse(localStorage.getItem("completedTasks")) || [];
+    JSON.parse(localStorage.getItem("completedTasks") || "[]");
 
+function getTodayDate() {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const day = String(today.getDate()).padStart(2, "0");
 
-// =====================================
-// Mark task as completed
-// =====================================
-
-function toggleTask(taskId) {
-
-    if (completedTasks.includes(taskId)) {
-
-        completedTasks =
-            completedTasks.filter(id => id !== taskId);
-
-    } else {
-
-        completedTasks.push(taskId);
-    }
-
-    saveProgress();
-    updateProgress();
+    return `${year}-${month}-${day}`;
 }
 
-
-// =====================================
-// Save progress
-// =====================================
-
-function saveProgress() {
-
-    localStorage.setItem(
-        "completedTasks",
-        JSON.stringify(completedTasks)
-    );
+function getTaskId(date, subject) {
+    return `${date}-${subject}`;
 }
 
+function getEffectiveTaskMap() {
+    const map = new Map();
 
-// =====================================
-// Calculate progress
-// =====================================
-
-function calculateProgress(totalTasks) {
-
-    if (totalTasks === 0) {
-        return 0;
-    }
-
-    return Math.round(
-        (completedTasks.length / totalTasks) * 100
-    );
-}
-
-
-// =====================================
-// Update progress
-// =====================================
-
-function updateProgress() {
-
-    const tasks =
-        document.querySelectorAll(".study-task");
-
-    const progressBar =
-        document.getElementById("progressBar");
-
-    const progressText =
-        document.getElementById("overallProgress");
-
-    const totalTasks = tasks.length;
-
-    const percentage =
-        calculateProgress(totalTasks);
-
-
-    // Update checkbox state
-    tasks.forEach(task => {
-
-        const taskId =
-            task.dataset.id;
-
-        const checkbox =
-            task.querySelector(".task-checkbox");
-
-        if (completedTasks.includes(taskId)) {
-
-            task.classList.add("completed");
-
-            if (checkbox) {
-                checkbox.checked = true;
-            }
-
-        } else {
-
-            task.classList.remove("completed");
-
-            if (checkbox) {
-                checkbox.checked = false;
-            }
-        }
+    currentPlan.forEach(day => {
+        day.tasks.forEach(task => {
+            const id = getTaskId(day.date, task.subject);
+            map.set(id, task);
+        });
     });
 
-
-    // Update progress bar
-    if (progressBar) {
-
-        progressBar.style.width =
-            percentage + "%";
-    }
-
-
-    // Update percentage text
-    if (progressText) {
-
-        progressText.textContent =
-            percentage + "%";
-    }
+    return map;
 }
 
+function showTodayPlan() {
+    const box = document.getElementById("todayPlan");
 
-// =====================================
-// Add checkboxes to study tasks
-// =====================================
+    if (!box) return;
 
-function setupTaskCheckboxes() {
+    const today = getTodayDate();
+    const todayData = currentPlan.find(day => day.date === today);
 
-    const tasks =
-        document.querySelectorAll(".study-task");
-
-    tasks.forEach((task, index) => {
-
-        // Don't add duplicate checkbox
-        if (task.querySelector(".task-checkbox")) {
-            return;
-        }
-
-        const taskId =
-            "task-" + index + "-" +
-            task.innerText.trim();
-
-        task.dataset.id = taskId;
-
-
-        const checkbox =
-            document.createElement("input");
-
-        checkbox.type = "checkbox";
-
-        checkbox.className =
-            "task-checkbox";
-
-
-        checkbox.addEventListener(
-            "change",
-            function () {
-
-                toggleTask(taskId);
-            }
-        );
-
-
-        task.insertBefore(
-            checkbox,
-            task.firstChild
-        );
-    });
-
-    updateProgress();
-}
-
-
-// =====================================
-// Exam Countdown
-// =====================================
-
-function startCountdown(examDate) {
-
-    const countdownElement =
-        document.getElementById("examCountdown");
-
-    if (!countdownElement) {
+    if (!todayData || todayData.tasks.length === 0) {
+        box.innerHTML = "<p>No tasks scheduled for today.</p>";
         return;
     }
 
+    box.innerHTML = "<h3>Today's Tasks</h3>";
 
-    function updateCountdown() {
+    todayData.tasks.forEach(task => {
+        const id = getTaskId(today, task.subject);
+        const checked = completedTasks.includes(id) ? "checked" : "";
 
-        const now =
-            new Date().getTime();
+        const row = document.createElement("div");
+        row.style.margin = "10px 0";
 
-        const examTime =
-            new Date(examDate).getTime();
+        row.innerHTML = `
+            <label>
+                <input
+                    type="checkbox"
+                    class="study-checkbox"
+                    data-id="${id}"
+                    ${checked}
+                >
+                📚 ${task.subject} - ${task.hours} hour(s)
+            </label>
+        `;
 
-        const difference =
-            examTime - now;
+        box.appendChild(row);
+    });
 
-
-        if (difference <= 0) {
-
-            countdownElement.textContent =
-                "Exam Day!";
-
-            return;
-        }
-
-
-        const days =
-            Math.floor(
-                difference /
-                (1000 * 60 * 60 * 24)
-            );
-
-
-        const hours =
-            Math.floor(
-                (difference /
-                (1000 * 60 * 60)) % 24
-            );
-
-
-        const minutes =
-            Math.floor(
-                (difference /
-                (1000 * 60)) % 60
-            );
-
-
-        countdownElement.textContent =
-            `${days} days ${hours} hours ${minutes} minutes`;
-    }
-
-
-    updateCountdown();
-
-    setInterval(
-        updateCountdown,
-        60000
-    );
+    addCheckboxEvents();
 }
 
+function showProgressTasks() {
+    const box = document.getElementById("progressContainer");
 
-// =====================================
-// When study plan is generated
-// =====================================
+    if (!box) return;
 
-document.addEventListener(
-    "studyPlanGenerated",
-    function () {
+    box.innerHTML = "";
 
-        // Add checkboxes
-        setupTaskCheckboxes();
+    if (!currentPlan.length) {
+        box.innerHTML = "<p>Complete your tasks to track progress.</p>";
+        return;
+    }
 
+    currentPlan.forEach(day => {
+        if (day.tasks.length === 0) return;
 
-        // Get subjects from study-plan.js
-        if (
-            typeof subjects !== "undefined" &&
-            subjects.length > 0
-        ) {
+        const heading = document.createElement("h3");
+        heading.textContent = `📅 ${day.date}`;
+        box.appendChild(heading);
 
-            // Find nearest exam
-            const sortedSubjects =
-                [...subjects].sort(
-                    (a, b) =>
-                        new Date(a.examDate) -
-                        new Date(b.examDate)
-                );
+        day.tasks.forEach(task => {
+            const id = getTaskId(day.date, task.subject);
+            const checked = completedTasks.includes(id) ? "checked" : "";
 
-            const nearestExam =
-                sortedSubjects[0];
+            const row = document.createElement("div");
+            row.style.margin = "8px 0";
 
-            startCountdown(
-                nearestExam.examDate
-            );
+            row.innerHTML = `
+                <label>
+                    <input
+                        type="checkbox"
+                        class="study-checkbox"
+                        data-id="${id}"
+                        ${checked}
+                    >
+                    ${task.subject} - ${task.hours} hour(s)
+                </label>
+            `;
+
+            box.appendChild(row);
+        });
+    });
+
+    addCheckboxEvents();
+}
+
+function addCheckboxEvents() {
+    const checkboxes = document.querySelectorAll(".study-checkbox");
+
+    checkboxes.forEach(box => {
+        box.onchange = function () {
+            const id = this.dataset.id;
+
+            if (this.checked) {
+                if (!completedTasks.includes(id)) completedTasks.push(id);
+            } else {
+                completedTasks = completedTasks.filter(item => item !== id);
+            }
+
+            localStorage.setItem("completedTasks", JSON.stringify(completedTasks));
+            updateProgress();
+        };
+    });
+}
+
+function updateProgress() {
+    const validTasks = getEffectiveTaskMap();
+    let total = 0;
+    let completed = 0;
+
+    validTasks.forEach(task => {
+        total += 1;
+
+        const id = getTaskId(task.date || getTodayDate(), task.subject);
+        if (completedTasks.includes(id)) {
+            completed += 1;
         }
+    });
+
+    currentPlan.forEach(day => {
+        day.tasks.forEach(task => {
+            const id = getTaskId(day.date, task.subject);
+            if (completedTasks.includes(id)) {
+                completed += 0;
+            }
+        });
+    });
+
+    let percentage = 0;
+
+    if (total > 0) {
+        percentage = Math.round((completed / total) * 100);
     }
-);
 
+    const percentageText = document.getElementById("overallProgress");
+    const progressBar = document.getElementById("progressBar");
 
-// =====================================
-// Restore progress when page loads
-// =====================================
-
-document.addEventListener(
-    "DOMContentLoaded",
-    function () {
-
-        updateProgress();
+    if (percentageText) {
+        percentageText.textContent = `${percentage}%`;
     }
-);
+
+    if (progressBar) {
+        progressBar.style.width = `${percentage}%`;
+    }
+}
+
+function showExamCountdown() {
+    const box = document.getElementById("examCountdown");
+
+    if (!box) return;
+
+    if (!currentPlan.length) {
+        box.innerHTML = "Add a subject to see the countdown.";
+        return;
+    }
+
+    const exams = [];
+
+    currentPlan.forEach(day => {
+        day.tasks.forEach(task => {
+            if (!exams.some(exam => exam.subject === task.subject && exam.date === task.examDate)) {
+                exams.push({
+                    subject: task.subject,
+                    date: task.examDate
+                });
+            }
+        });
+    });
+
+    if (!exams.length) {
+        box.innerHTML = "No upcoming exams.";
+        return;
+    }
+
+    box.innerHTML = "";
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    exams.forEach(exam => {
+        const examDate = new Date(exam.date);
+        examDate.setHours(0, 0, 0, 0);
+
+        const difference = examDate - today;
+        const days = Math.ceil(difference / (1000 * 60 * 60 * 24));
+
+        let message = "";
+
+        if (days < 0) {
+            message = `📚 ${exam.subject} — Exam completed`;
+        } else if (days === 0) {
+            message = `🔥 ${exam.subject} — EXAM IS TODAY!`;
+        } else {
+            message = `⏰ ${exam.subject} — Exam in ${days} day(s)`;
+        }
+
+        const paragraph = document.createElement("p");
+        paragraph.style.fontSize = "18px";
+        paragraph.textContent = message;
+        box.appendChild(paragraph);
+    });
+}
+
+document.addEventListener("studyPlanGenerated", function(event) {
+    currentPlan = event.detail || [];
+
+    showTodayPlan();
+    showProgressTasks();
+    updateProgress();
+    showExamCountdown();
+});
