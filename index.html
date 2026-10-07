@@ -1,1 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    <title>Smart Study Planner</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <h1>📚 Smart Study Planner</h1>
+            <p>Plan smarter. Study better. Achieve more.</p>
+        </div>
+    </header>
+
+
+    <main class="container">
+
+        <!-- Add Subject Section -->
+        <section class="card">
+            <h2>Add Subject</h2>
+
+            <form id="subjectForm">
+
+                <div class="form-group">
+                    <label for="subjectName">Subject Name</label>
+                    <input
+                        type="text"
+                        id="subjectName"
+                        placeholder="Example: DBMS"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="examDate">Exam Date</label>
+                    <input
+                        type="date"
+                        id="examDate"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="studyHours">Available Hours Per Day</label>
+                    <input
+                        type="number"
+                        id="studyHours"
+                        min="1"
+                        max="24"
+                        placeholder="Example: 3"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="difficulty">Difficulty</label>
+
+                    <select id="difficulty" required>
+                        <option value="">Select difficulty</option>
+                        <option value="easy">Easy</option>
+                        <option value="medium">Medium</option>
+                        <option value="hard">Hard</option>
+                    </select>
+                </div>
+
+                <button type="submit" id="addSubjectBtn">
+                    ➕ Add Subject
+                </button>
+
+            </form>
+        </section>
+
+
+        <!-- Subjects Section -->
+        <section class="card">
+            <h2>Your Subjects</h2>
+
+            <div id="subjectsList">
+                <p>No subjects added yet.</p>
+            </div>
+        </section>
+
+
+        <!-- Generate Plan -->
+        <section class="card">
+            <h2>Generate Study Plan</h2>
+
+            <button id="generatePlanBtn">
+                🗓️ Generate Study Plan
+            </button>
+        </section>
+
+
+        <!-- Exam Countdown -->
+        <section class="card">
+            <h2>Exam Countdown</h2>
+
+            <div id="examCountdown">
+                Add a subject to see the countdown.
+            </div>
+        </section>
+
+
+        <!-- Study Plan -->
+        <section class="card">
+            <h2>📅 Your Study Timetable</h2>
+
+            <div id="planContainer">
+                <p>Your generated timetable will appear here.</p>
+            </div>
+        </section>
+
+
+        <!-- Today's Plan -->
+        <section class="card">
+            <h2>🎯 Today's Plan</h2>
+
+            <div id="todayPlan">
+                <p>No tasks for today.</p>
+            </div>
+        </section>
+
+
+        <!-- Progress -->
+        <section class="card">
+            <h2>📊 Study Progress</h2>
+
+            <div class="progress-section">
+
+                <p>
+                    Overall Progress:
+                    <strong id="overallProgress">0%</strong>
+                </p>
+
+                <div class="progress-bar">
+                    <div
+                        id="progressBar"
+                        class="progress-fill"
+                        style="width: 0%;">
+                    </div>
+                </div>
+
+            </div>
+
+            <div id="progressContainer">
+                <p>Complete your tasks to track progress.</p>
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- JavaScript files -->
+    <script src="study-plan.js"></script>
+    <script src="progress.js"></script>
+
+</body>
+</html>
