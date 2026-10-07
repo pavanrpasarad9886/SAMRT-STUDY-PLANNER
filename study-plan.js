@@ -3,6 +3,7 @@
 
 let subjects = [];
 
+// Calculate days remaining until exam
 function calculateDaysRemaining(examDate) {
     const today = new Date();
     const exam = new Date(examDate);
@@ -17,14 +18,16 @@ function calculateDaysRemaining(examDate) {
     );
 }
 
+
+// Calculate priority based on difficulty + exam urgency
 function calculatePriority(subject) {
     const days = calculateDaysRemaining(subject.examDate);
 
     let difficultyScore = 1;
 
-    if (subject.difficulty === "Hard") {
+    if (subject.difficulty === "hard") {
         difficultyScore = 3;
-    } else if (subject.difficulty === "Medium") {
+    } else if (subject.difficulty === "medium") {
         difficultyScore = 2;
     }
 
@@ -45,13 +48,18 @@ function calculatePriority(subject) {
     return urgencyScore + difficultyScore;
 }
 
+
+// Sort subjects from highest priority to lowest
 function sortSubjectsByPriority(subjectList) {
     return [...subjectList].sort((a, b) => {
         return calculatePriority(b) - calculatePriority(a);
     });
 }
 
+
+// Generate the study timetable
 function generateStudyPlan(subjectList, dailyHours) {
+
     if (!subjectList || subjectList.length === 0) {
         return [];
     }
@@ -64,7 +72,8 @@ function generateStudyPlan(subjectList, dailyHours) {
         return [];
     }
 
-    const sortedSubjects = sortSubjectsByPriority(validSubjects);
+    const sortedSubjects =
+        sortSubjectsByPriority(validSubjects);
 
     const maxDays = Math.max(
         ...sortedSubjects.map(subject =>
@@ -75,20 +84,26 @@ function generateStudyPlan(subjectList, dailyHours) {
     const plan = [];
 
     for (let day = 0; day <= maxDays; day++) {
+
         let remainingHours = Number(dailyHours);
 
         if (remainingHours <= 0) {
             break;
         }
 
-        const today = new Date();
-        today.setDate(today.getDate() + day);
+        const currentDate = new Date();
 
-        const dateString = today.toISOString().split("T")[0];
+        currentDate.setDate(
+            currentDate.getDate() + day
+        );
+
+        const dateString =
+            currentDate.toISOString().split("T")[0];
 
         const dayTasks = [];
 
         for (const subject of sortedSubjects) {
+
             const daysLeft =
                 calculateDaysRemaining(subject.examDate) - day;
 
@@ -96,7 +111,8 @@ function generateStudyPlan(subjectList, dailyHours) {
                 continue;
             }
 
-            const priority = calculatePriority(subject);
+            const priority =
+                calculatePriority(subject);
 
             let allocatedHours = 1;
 
@@ -106,10 +122,11 @@ function generateStudyPlan(subjectList, dailyHours) {
                 allocatedHours = 1.5;
             }
 
-            allocatedHours = Math.min(
-                allocatedHours,
-                remainingHours
-            );
+            allocatedHours =
+                Math.min(
+                    allocatedHours,
+                    remainingHours
+                );
 
             dayTasks.push({
                 subject: subject.name,
@@ -130,34 +147,51 @@ function generateStudyPlan(subjectList, dailyHours) {
     return plan;
 }
 
+
+// Display generated timetable
 function displayStudyPlan(plan) {
+
+    // Matches Member 1 HTML:
+    // <div id="planContainer">
     const timetableContainer =
-        document.getElementById("timetable");
+        document.getElementById("planContainer");
 
     if (!timetableContainer) {
-        console.log("Generated Study Plan:", plan);
+        console.log(
+            "Generated Study Plan:",
+            plan
+        );
         return;
     }
 
     timetableContainer.innerHTML = "";
 
     if (plan.length === 0) {
+
         timetableContainer.innerHTML =
             "<p>No study plan could be generated.</p>";
+
         return;
     }
 
     plan.forEach(day => {
-        const dayCard = document.createElement("div");
+
+        const dayCard =
+            document.createElement("div");
 
         dayCard.className = "day-card";
 
         let tasksHTML = "";
 
         if (day.tasks.length === 0) {
-            tasksHTML = "<p>No tasks scheduled.</p>";
+
+            tasksHTML =
+                "<p>No tasks scheduled.</p>";
+
         } else {
+
             day.tasks.forEach(task => {
+
                 tasksHTML += `
                     <div class="study-task">
                         <strong>${task.subject}</strong>
@@ -176,28 +210,48 @@ function displayStudyPlan(plan) {
     });
 }
 
-function getSubjectsFromForm() {
+
+// Read subject information from Member 1's HTML form
+function getSubjectFromForm() {
+
     const subjectName =
-        document.getElementById("subjectName")?.value.trim();
+        document
+            .getElementById("subjectName")
+            ?.value
+            .trim();
 
     const examDate =
-        document.getElementById("examDate")?.value;
+        document
+            .getElementById("examDate")
+            ?.value;
 
-    const difficulty =
-        document.getElementById("difficulty")?.value;
-
-    const availableHours =
+    const studyHours =
         Number(
-            document.getElementById("availableHours")?.value
+            document
+                .getElementById("studyHours")
+                ?.value
         );
 
+    const difficulty =
+        document
+            .getElementById("difficulty")
+            ?.value;
+
     if (!subjectName || !examDate || !difficulty) {
-        alert("Please fill in all subject details.");
+
+        alert(
+            "Please fill in all subject details."
+        );
+
         return null;
     }
 
-    if (!availableHours || availableHours <= 0) {
-        alert("Please enter valid available study hours.");
+    if (!studyHours || studyHours <= 0) {
+
+        alert(
+            "Please enter valid study hours."
+        );
+
         return null;
     }
 
@@ -205,12 +259,16 @@ function getSubjectsFromForm() {
         name: subjectName,
         examDate: examDate,
         difficulty: difficulty,
-        availableHours: availableHours
+        studyHours: studyHours
     };
 }
 
+
+// Add a subject to the subject list
 function addSubject() {
-    const subject = getSubjectsFromForm();
+
+    const subject =
+        getSubjectFromForm();
 
     if (!subject) {
         return;
@@ -218,62 +276,128 @@ function addSubject() {
 
     subjects.push(subject);
 
+    // Matches Member 1 HTML:
+    // <div id="subjectsList">
     const subjectList =
-        document.getElementById("subjectList");
+        document.getElementById("subjectsList");
 
     if (subjectList) {
-        const item = document.createElement("div");
 
-        item.className = "subject-item";
+        // Remove "No subjects added yet."
+        if (subjects.length === 1) {
+            subjectList.innerHTML = "";
+        }
+
+        const item =
+            document.createElement("div");
+
+        item.className =
+            "subject-item";
 
         item.innerHTML = `
             <strong>${subject.name}</strong>
             <span>
                 Exam: ${subject.examDate} |
-                Difficulty: ${subject.difficulty}
+                Difficulty: ${subject.difficulty} |
+                Hours: ${subject.studyHours}
             </span>
         `;
 
         subjectList.appendChild(item);
     }
 
+    // Clear form
     document.getElementById("subjectName").value = "";
     document.getElementById("examDate").value = "";
+    document.getElementById("studyHours").value = "";
+    document.getElementById("difficulty").value = "";
 }
 
+
+// Generate plan using available hours per day
 function generatePlanFromSubjects() {
-    const hoursInput =
-        document.getElementById("availableHours");
 
-    const dailyHours = Number(hoursInput?.value);
+    if (subjects.length === 0) {
 
-    if (!dailyHours || dailyHours <= 0) {
-        alert("Please enter your available study hours per day.");
+        alert(
+            "Please add at least one subject first."
+        );
+
         return;
     }
 
-    const plan = generateStudyPlan(subjects, dailyHours);
+    // Use the first subject's daily hours.
+    // The HTML currently has one "Available Hours Per Day"
+    // field inside the Add Subject form.
+    const dailyHours =
+        Number(subjects[0].studyHours);
+
+    if (!dailyHours || dailyHours <= 0) {
+
+        alert(
+            "Please enter your available study hours per day."
+        );
+
+        return;
+    }
+
+    const plan =
+        generateStudyPlan(
+            subjects,
+            dailyHours
+        );
 
     displayStudyPlan(plan);
 
+    // Make the plan available to progress.js
     window.generatedStudyPlan = plan;
+
+    // Notify other JavaScript files
+    document.dispatchEvent(
+        new CustomEvent(
+            "studyPlanGenerated",
+            {
+                detail: plan
+            }
+        )
+    );
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-    const addButton =
-        document.getElementById("addSubjectBtn");
 
-    const generateButton =
-        document.getElementById("generatePlanBtn");
+// Connect buttons after page loads
+document.addEventListener(
+    "DOMContentLoaded",
+    () => {
 
-    if (addButton) {
-        addButton.addEventListener("click", addSubject);
+        const addButton =
+            document.getElementById(
+                "addSubjectBtn"
+            );
+
+        const generateButton =
+            document.getElementById(
+                "generatePlanBtn"
+            );
+
+        if (addButton) {
+
+            addButton.addEventListener(
+                "click",
+                function(event) {
+
+                    event.preventDefault();
+
+                    addSubject();
+                }
+            );
+        }
+
+        if (generateButton) {
+
+            generateButton.addEventListener(
+                "click",
+                generatePlanFromSubjects
+            );
+        }
     }
-
-    if (generateButton) {
-        generateButton.addEventListener(
-            "click",
-            generatePlanFromSubjects
-        );
-    }
-});
+);
